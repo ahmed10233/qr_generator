@@ -15,7 +15,7 @@ class SectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       decoration: BoxDecoration(
         color: const Color(0xFF1A1F2E),
         borderRadius: BorderRadius.circular(14),
@@ -39,7 +39,7 @@ class SectionCard extends StatelessWidget {
               Icon(icon, size: 15, color: const Color(0xFF4F8EF7)),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 4),
           child,
         ],
       ),

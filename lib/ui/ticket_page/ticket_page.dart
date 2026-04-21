@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:qr_generate/cubit/cubit/create_ticket_cubit.dart';
-import 'package:qr_generate/cubit/cubit/create_ticket_state.dart';
-import 'package:qr_generate/widgets/custom_widget/counter_widget.dart';
+import 'package:qr_generate/cubit/ticket_cubit/create_ticket_cubit.dart';
+import 'package:qr_generate/cubit/ticket_cubit/create_ticket_state.dart';
 import 'package:qr_generate/widgets/custom_widget/date_widget.dart';
-import 'package:qr_generate/widgets/custom_widget/stations_widget.dart';
+import 'package:qr_generate/widgets/ticket_widgets/counter_widget.dart';
+import 'package:qr_generate/widgets/ticket_widgets/stations_widget.dart';
+import 'package:qr_generate/widgets/ticket_widgets/ticket_details.dart';
 
 class CreateTicketPage extends StatelessWidget {
   const CreateTicketPage({super.key});
@@ -67,6 +68,7 @@ class CreateTicketPage extends StatelessWidget {
   // ─── Build ────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
+    TextEditingController ticketIdController = TextEditingController();
     return BlocProvider(
       create: (context) => CreateTicketCubit(),
       child: Scaffold(
@@ -81,16 +83,16 @@ class CreateTicketPage extends StatelessWidget {
                   const SizedBox(height: 14),
                   _buildDateTimeCard(context, state),
                   const SizedBox(height: 14),
+                  _buildTicketId(context, ticketIdController),
+                  const SizedBox(height: 14),
                   _buildStationCard(context, state),
                   const SizedBox(height: 14),
                   _buildCounterCard(context, state),
                   const SizedBox(height: 14),
                   _buildKeyCard(),
                   const SizedBox(height: 24),
-
                   const SizedBox(height: 16),
                   _buildTicketCard(state),
-
                   const SizedBox(height: 24),
                   _buildActionButtons(),
                 ],
@@ -194,14 +196,22 @@ class CreateTicketPage extends StatelessWidget {
               color: _accentColor,
             ),
             style: const TextStyle(color: Colors.white, fontSize: 15),
-            items: _stations.map((s) {
+            items: _stations.map((stationName) {
               return DropdownMenuItem(
-                value: s,
-                child: Text(s, style: const TextStyle(color: Colors.white)),
+                alignment: AlignmentGeometry.center,
+                value: stationName,
+                child: Text(
+                  stationName,
+                  style: const TextStyle(color: Colors.white),
+                ),
               );
             }).toList(),
-            onChanged: (v) {
-              if (v != null) context.read<CreateTicketCubit>().changeStation(v);
+            onChanged: (selectedNewStation) {
+              if (selectedNewStation != null) {
+                context.read<CreateTicketCubit>().changeStation(
+                  selectedNewStation,
+                );
+              }
             },
           ),
         ),
@@ -275,11 +285,29 @@ class CreateTicketPage extends StatelessWidget {
     );
   }
 
+  Widget _buildTicketId(
+    BuildContext context,
+    TextEditingController controller,
+  ) {
+    return SectionCard(
+      icon: Icons.title_sharp,
+      title: "رقم التذكرة",
+      child: TextField(
+        controller: controller,
+        keyboardType: TextInputType.number,
+        style: TextStyle(color: Colors.white),
+        onChanged: (con) {
+          context.read<CreateTicketCubit>().changeTicketId(controller);
+        },
+      ),
+    );
+  }
+
   Widget buildQR(String keyValue) {
     return QrImageView(
       data: keyValue,
       version: QrVersions.auto,
-      size: 160,
+      size: 180,
       backgroundColor: Colors.white,
     );
   }
@@ -344,8 +372,8 @@ class CreateTicketPage extends StatelessWidget {
               child: Column(
                 children: [
                   Container(
-                    width: 160,
-                    height: 160,
+                    width: 220,
+                    height: 220,
                     decoration: BoxDecoration(
                       color: const Color(0xFFF3F4F6),
                       borderRadius: BorderRadius.circular(12),
@@ -359,39 +387,44 @@ class CreateTicketPage extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     "امسح للتحقق من التذكرة",
-                    style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+                    style: TextStyle(color: Colors.black, fontSize: 14),
                   ),
                   const SizedBox(height: 20),
                   Directionality(
                     textDirection: TextDirection.rtl,
                     child: Column(
                       children: [
-                        InfoRow(
+                        TicketDetailsRow(
                           label: "رقم التذكرة",
                           value:
                               "TKT-${state.stationCount.toString().padLeft(4, '0')}",
                         ),
                         const _InfoDivider(),
-                        InfoRow(
+                        TicketDetailsRow(
                           label: "تاريخ الإصدار",
                           value:
                               "${_formatDate(state.date)}  ${_formatTime(state.date)}",
                         ),
                         const _InfoDivider(),
-                        InfoRow(
+                        TicketDetailsRow(
                           label: "صالحة حتى",
                           value:
                               "${_formatDate(state.toDate)}  ${_formatTime(state.toDate)}",
                         ),
                         const _InfoDivider(),
-                        InfoRow(
+                        TicketDetailsRow(
                           label: "المحطة",
                           value: state.station.split(' - ').last,
                         ),
                         const _InfoDivider(),
-                        InfoRow(
+                        TicketDetailsRow(
                           label: "عدد المحطات المسموح بها",
                           value: "${state.stationCount}",
+                        ),
+                        const _InfoDivider(),
+                        TicketDetailsRow(
+                          label: "رقم التذكرة",
+                          value: state.ticketId.text,
                         ),
                       ],
                     ),
@@ -442,36 +475,6 @@ class CreateTicketPage extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class InfoRow extends StatelessWidget {
-  final String label;
-  final String value;
-  const InfoRow({super.key, required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(color: Color(0xFF6B7280), fontSize: 13),
-          ),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Color(0xFF111827),
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

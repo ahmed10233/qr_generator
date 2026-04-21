@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'create_ticket_state.dart';
@@ -25,5 +26,9 @@ class CreateTicketCubit extends Cubit<CreateTicketState> {
     } else {
       emit(state.copyWith(toDate: date));
     }
+  }
+
+  void changeTicketId(TextEditingController ticketId) {
+    emit(state.copyWith(ticketId: ticketId));
   }
 }
