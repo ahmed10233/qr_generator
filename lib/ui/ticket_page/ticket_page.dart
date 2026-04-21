@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:qr_generate/cubit/ticket_cubit/create_ticket_cubit.dart';
 import 'package:qr_generate/cubit/ticket_cubit/create_ticket_state.dart';
@@ -7,6 +10,8 @@ import 'package:qr_generate/widgets/custom_widget/date_widget.dart';
 import 'package:qr_generate/widgets/ticket_widgets/counter_widget.dart';
 import 'package:qr_generate/widgets/ticket_widgets/stations_widget.dart';
 import 'package:qr_generate/widgets/ticket_widgets/ticket_details.dart';
+import 'package:screenshot/screenshot.dart';
+import 'package:share_plus/share_plus.dart';
 
 class CreateTicketPage extends StatelessWidget {
   const CreateTicketPage({super.key});
@@ -65,6 +70,20 @@ class CreateTicketPage extends StatelessWidget {
     cubit.updateDate(newDate, isFrom);
   }
 
+  static final ScreenshotController _screenshotController =
+      ScreenshotController();
+  Future<void> _shareTicket() async {
+    final image = await _screenshotController.capture(pixelRatio: 3.0);
+    if (image == null) return;
+
+    final tempDir = await getTemporaryDirectory();
+    final file = await File('${tempDir.path}/ticket.png').writeAsBytes(image);
+
+    await SharePlus.instance.share(
+      ShareParams(files: [XFile(file.path)], text: 'تذكرتي'),
+    );
+  }
+
   // ─── Build ────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
@@ -78,24 +97,27 @@ class CreateTicketPage extends StatelessWidget {
           builder: (context, state) {
             return SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-              child: Column(
-                children: [
-                  const SizedBox(height: 14),
-                  _buildDateTimeCard(context, state),
-                  const SizedBox(height: 14),
-                  _buildTicketId(context, ticketIdController),
-                  const SizedBox(height: 14),
-                  _buildStationCard(context, state),
-                  const SizedBox(height: 14),
-                  _buildCounterCard(context, state),
-                  const SizedBox(height: 14),
-                  _buildKeyCard(),
-                  const SizedBox(height: 24),
-                  const SizedBox(height: 16),
-                  _buildTicketCard(state),
-                  const SizedBox(height: 24),
-                  _buildActionButtons(),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 14),
+                    _buildDateTimeCard(context, state),
+                    const SizedBox(height: 14),
+                    _buildTicketId(context, ticketIdController),
+                    const SizedBox(height: 14),
+                    _buildStationCard(context, state),
+                    const SizedBox(height: 14),
+                    _buildCounterCard(context, state),
+                    const SizedBox(height: 14),
+                    _buildKeyCard(),
+                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
+                    _buildTicketCard(state),
+                    const SizedBox(height: 24),
+                    _buildActionButtons(),
+                  ],
+                ),
               ),
             );
           },
@@ -314,27 +336,26 @@ class CreateTicketPage extends StatelessWidget {
 
   // ─── Ticket Card ──────────────────────────────────────────
   Widget _buildTicketCard(CreateTicketState state) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: _accentColor.withValues(alpha: 0.15),
-            blurRadius: 30,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+    return Screenshot(
+      controller: _screenshotController,
+      child: Container(
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
         child: Column(
           children: [
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 20),
+              padding: const EdgeInsets.symmetric(vertical: 8),
               decoration: const BoxDecoration(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(18),
+                  topRight: Radius.circular(18),
+                ),
                 gradient: LinearGradient(
-                  colors: [Color(0xFF1D3A6E), Color(0xFF1A5494)],
+                  colors: [
+                    Color.fromARGB(255, 8, 38, 93),
+                    Color.fromARGB(255, 9, 115, 228),
+                    Color.fromARGB(255, 141, 125, 219),
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -426,6 +447,7 @@ class CreateTicketPage extends StatelessWidget {
                           label: "رقم التذكرة",
                           value: state.ticketId.text,
                         ),
+                        const _InfoDivider(),
                       ],
                     ),
                   ),
@@ -452,7 +474,9 @@ class CreateTicketPage extends StatelessWidget {
               ),
               foregroundColor: Colors.white70,
             ),
-            onPressed: () {},
+            onPressed: () {
+              _shareTicket();
+            },
             icon: const Icon(Icons.share_rounded, size: 18),
             label: const Text("SHARE"),
           ),
