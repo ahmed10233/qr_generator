@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:path_provider/path_provider.dart';
@@ -8,6 +7,7 @@ import 'package:qr_generate/cubit/ticket_cubit/create_ticket_cubit.dart';
 import 'package:qr_generate/cubit/ticket_cubit/create_ticket_state.dart';
 import 'package:qr_generate/widgets/custom_widget/date_widget.dart';
 import 'package:qr_generate/widgets/ticket_widgets/counter_widget.dart';
+import 'package:qr_generate/widgets/custom_widget/custom_app_bar.dart';
 import 'package:qr_generate/widgets/ticket_widgets/stations_widget.dart';
 import 'package:qr_generate/widgets/ticket_widgets/ticket_details.dart';
 import 'package:screenshot/screenshot.dart';
@@ -62,14 +62,13 @@ class CreateTicketPage extends StatelessWidget {
     "2128 - الجولف",
     "2129 - المشير طنطاوي",
     "2130 - المتحف المصري الكبير",
-    "2131 - 6 أكتوبر",
+    "2131 - مدخل أكتوبر",
     "2132 - تقاطع الفيوم",
     "2133 - المنصورية",
   ];
-  static const _accentColor = Color(0xFF4F8EF7);
-  static const _surfaceBg = Color(0xFF111827);
-  static const String _keyValue =
-      "gUdeENpYlayCon56lgAzlVDtUBrvAndFhQwv4EXj9i7Aw3KghzW//cLHzDHQnpLilAbczr2avHsCuFyo38e2qcVdX/Iqn/5y";
+  static const accentColor = Color(0xFF4F8EF7);
+  static const surfaceBg = Color(0xFF111827);
+  static const String _keyValue = "gUdeENpYlayCon56lgAzlVDtUBrvAndF";
 
   // ─── Helpers ──────────────────────────────────────────────
   String _formatDate(DateTime dt) =>
@@ -129,8 +128,8 @@ class CreateTicketPage extends StatelessWidget {
     return BlocProvider(
       create: (context) => CreateTicketCubit(),
       child: Scaffold(
-        backgroundColor: _surfaceBg,
-        appBar: _buildAppBar(context),
+        backgroundColor: surfaceBg,
+        appBar: const CustomAppBar(),
         body: BlocBuilder<CreateTicketCubit, CreateTicketState>(
           builder: (context, state) {
             return SingleChildScrollView(
@@ -164,40 +163,6 @@ class CreateTicketPage extends StatelessWidget {
     );
   }
 
-  // ─── AppBar ───────────────────────────────────────────────
-  PreferredSizeWidget _buildAppBar(BuildContext context) {
-    return AppBar(
-      backgroundColor: _surfaceBg,
-      elevation: 0,
-      surfaceTintColor: Colors.transparent,
-      centerTitle: true,
-      leading: IconButton(
-        icon: const Icon(
-          Icons.arrow_back_ios_new_rounded,
-          color: Colors.white70,
-          size: 20,
-        ),
-        onPressed: () => Navigator.maybePop(context),
-      ),
-      title: const Text(
-        "إنشاء تذكرة جديدة",
-        style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w700,
-          fontSize: 17,
-        ),
-      ),
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(1),
-        child: Container(
-          height: 2,
-          color: Colors.white.withValues(alpha: 0.06),
-        ),
-      ),
-    );
-  }
-
-  // ─── Date & Time Card ─────────────────────────────────────
   Widget _buildDateTimeCard(BuildContext context, CreateTicketState state) {
     return SectionCard(
       icon: Icons.event_rounded,
@@ -252,7 +217,6 @@ class CreateTicketPage extends StatelessWidget {
     );
   }
 
-  // ─── Station Card ─────────────────────────────────────────
   Widget _buildStationCard(BuildContext context, CreateTicketState state) {
     return SectionCard(
       icon: Icons.train_rounded,
@@ -272,7 +236,7 @@ class CreateTicketPage extends StatelessWidget {
             dropdownColor: const Color(0xFF242B3D),
             icon: const Icon(
               Icons.keyboard_arrow_down_rounded,
-              color: _accentColor,
+              color: accentColor,
             ),
             style: const TextStyle(color: Colors.white, fontSize: 15),
             items: _stations.map((stationName) {
@@ -298,7 +262,6 @@ class CreateTicketPage extends StatelessWidget {
     );
   }
 
-  // ─── Counter Card ─────────────────────────────────────────
   Widget _buildCounterCard(BuildContext context, CreateTicketState state) {
     return SectionCard(
       icon: Icons.confirmation_number_rounded,
@@ -343,7 +306,6 @@ class CreateTicketPage extends StatelessWidget {
     );
   }
 
-  // ─── Key Card ─────────────────────────────────────────────
   Widget _buildKeyCard() {
     return SectionCard(
       icon: Icons.vpn_key_rounded,
@@ -373,7 +335,6 @@ class CreateTicketPage extends StatelessWidget {
     );
   }
 
-  // ─── Ticket Card ──────────────────────────────────────────
   Widget _buildTicketCard(CreateTicketState state) {
     return Screenshot(
       controller: _screenshotController,
@@ -442,7 +403,18 @@ class CreateTicketPage extends StatelessWidget {
                         width: 1.5,
                       ),
                     ),
-                    child: buildQR(_keyValue),
+                    child: buildQR(
+                      CreateTicketCubit.buildEncryptedQrPayload(
+                        ticketId: state.ticketId,
+                        stationCount: state.stationCount,
+                        sourceStationId: CreateTicketCubit.parseStationId(
+                          state.station,
+                        ),
+                        destinationStationId:
+                            CreateTicketCubit.parseStationId(state.station) +
+                            state.stationCount,
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 6),
                   Text(
@@ -495,7 +467,6 @@ class CreateTicketPage extends StatelessWidget {
     );
   }
 
-  // ─── Action Buttons ───────────────────────────────────────
   Widget _buildActionButtons() {
     return Row(
       children: [
@@ -521,7 +492,7 @@ class CreateTicketPage extends StatelessWidget {
           flex: 2,
           child: ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
-              backgroundColor: _accentColor,
+              backgroundColor: accentColor,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(

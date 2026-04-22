@@ -1,5 +1,8 @@
+import 'dart:convert';
 import 'dart:math';
+import 'dart:typed_data';
 
+import 'package:encrypt/encrypt.dart' as enc;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'create_ticket_state.dart';
@@ -7,9 +10,7 @@ import 'create_ticket_state.dart';
 class CreateTicketCubit extends Cubit<CreateTicketState> {
   CreateTicketCubit() : super(CreateTicketState.initial());
 
-  static DateTime _calcToDate(DateTime date, int stationCount) {
-    return date.add(Duration(minutes: stationCount * 30));
-  }
+  static const String _keyValue = "gUdeENpYlayCon56lgAzlVDtUBrvAndF";
 
   static String _generateTicketId(DateTime dt) {
     final datePart = [
@@ -21,8 +22,16 @@ class CreateTicketCubit extends Cubit<CreateTicketState> {
     ].join();
 
     final randomPart = List.generate(8, (_) => Random().nextInt(10)).join();
-
     return '$datePart$randomPart';
+  }
+
+  static DateTime _calcToDate(DateTime date, int stationCount) {
+    return date.add(Duration(minutes: stationCount * 30));
+  }
+
+  static int parseStationId(String? station) {
+    if (station == null) return 0;
+    return int.tryParse(station.split(' - ').first.trim()) ?? 0;
   }
 
   void increment() {
@@ -52,7 +61,7 @@ class CreateTicketCubit extends Cubit<CreateTicketState> {
   }
 
   void updateDate(DateTime date, bool isFrom) {
-    if (isFrom == true) {
+    if (isFrom) {
       emit(
         state.copyWith(
           date: date,
@@ -63,5 +72,35 @@ class CreateTicketCubit extends Cubit<CreateTicketState> {
     } else {
       emit(state.copyWith(toDate: date));
     }
+  }
+
+  static String buildEncryptedQrPayload({
+    required String ticketId,
+    required int stationCount,
+    required int sourceStationId,
+    required int destinationStationId,
+  }) {
+    final buffer = ByteData(14);
+    final ticketNumber = int.tryParse(ticketId) ?? 0;
+    buffer.setUint64(0, ticketNumber, Endian.little);
+    buffer.setUint16(8, stationCount, Endian.little);
+    buffer.setUint16(10, sourceStationId, Endian.little);
+    buffer.setUint16(12, destinationStationId, Endian.little);
+
+    final payload = buffer.buffer.asUint8List();
+    final aesKey = enc.Key.fromUtf8(_keyValue);
+    final iv = enc.IV.fromSecureRandom(16);
+
+    final encrypter = enc.Encrypter(
+      enc.AES(aesKey, mode: enc.AESMode.cbc, padding: 'PKCS7'),
+    );
+
+    final encrypted = encrypter.encryptBytes(payload, iv: iv);
+
+    final result = Uint8List(16 + encrypted.bytes.length);
+    result.setRange(0, 16, iv.bytes);
+    result.setRange(16, result.length, encrypted.bytes);
+
+    return base64Encode(result);
   }
 }
