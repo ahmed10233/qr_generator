@@ -1,34 +1,42 @@
-import 'package:flutter/material.dart';
+import 'dart:math';
 
 class CreateTicketState {
   final int stationCount;
-  final TextEditingController ticketId;
-  final String station;
+  final String ticketId;
+  final String? station; // ← nullable
   final DateTime date;
   final DateTime toDate;
 
   const CreateTicketState({
     required this.stationCount,
-
     required this.station,
-
     required this.date,
-
-    required this.toDate,
     required this.ticketId,
+    required this.toDate,
   });
 
   factory CreateTicketState.initial() {
+    final now = DateTime.now();
     return CreateTicketState(
       stationCount: 1,
-
-      station: "2099 - اسكندرية الزراعي",
-
-      date: DateTime.now(),
-
-      toDate: DateTime.now(),
-      ticketId: TextEditingController(),
+      station: null,
+      date: now,
+      ticketId: _generateTicketId(now),
+      toDate: now.add(const Duration(minutes: 30)),
     );
+  }
+  static String _generateTicketId(DateTime dt) {
+    final datePart = [
+      dt.year.toString().substring(2),
+      dt.month.toString().padLeft(2, '0'),
+      dt.day.toString().padLeft(2, '0'),
+      dt.hour.toString().padLeft(2, '0'),
+      dt.minute.toString().padLeft(2, '0'),
+    ].join();
+
+    final randomPart = List.generate(8, (_) => Random().nextInt(10)).join();
+
+    return '$datePart$randomPart';
   }
 
   CreateTicketState copyWith({
@@ -36,7 +44,7 @@ class CreateTicketState {
     String? station,
     DateTime? date,
     DateTime? toDate,
-    TextEditingController? ticketId,
+    String? ticketId,
   }) {
     return CreateTicketState(
       stationCount: stationCount ?? this.stationCount,

@@ -22,7 +22,7 @@ class SectionCard extends StatelessWidget {
         border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Row(
             mainAxisAlignment: .end,

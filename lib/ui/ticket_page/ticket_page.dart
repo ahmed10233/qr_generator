@@ -16,17 +16,56 @@ import 'package:share_plus/share_plus.dart';
 class CreateTicketPage extends StatelessWidget {
   const CreateTicketPage({super.key});
 
-  // ─── Constants ──────────────────────────────────────────
   static const _stations = [
+    "2085 - أكاديمية الرشطة",
+    "2087 - طريق السويس",
+    "2088 - عدلي منصور",
+    "2089 - السلام",
+    "2090 - الفريق ابراهيم العرابي",
+    "2091 - مؤسسة الزكاة",
+    "2092 - القلج",
+    "2093 - المرج",
+    "2094 - الخصوص",
+    "2095 - مسطرد",
+    "2096 - بهتيم",
+    "2097 - شبا بنها",
+    "2098 - العقيد احمد عبدالرحيم",
     "2099 - اسكندرية الزراعي",
-    "القاهرة",
-    "رمسيس",
-    "طنطا",
-    "المنصورة",
-    "دمياط",
-    "بورسعيد",
+    "2100 - باسوس",
+    "2101 - الوراق",
+    "2102 - شبرا مصر",
+    "2103 - إمبابة",
+    "2104 - محور احمد عرابي",
+    "2105 - ارض اللواء",
+    "2106 - الباجيل",
+    "2107 - محور 26 يوليو",
+    "2108 - المعتمدية",
+    "2109 - زنين",
+    "2110 - صفط اللبن",
+    "2111 - منشأة البكاري",
+    "2112 - مسجد المدينة",
+    "2113 - الملك فيصل",
+    "2114 - الهرم",
+    "2115 - ترسا",
+    "2116 - المريوطية",
+    "2117 - الطالبية",
+    "2118 - العمرانية",
+    "2119 - البحر الاعظم",
+    "2120 - الزهراء",
+    "2121 - الإمامين",
+    "2122 - شارع الجزائر",
+    "2123 - الأوتوستراد",
+    "2124 - المقطم",
+    "2125 - كارفور المعادي",
+    "2126 - النساجون الشرقيون",
+    "2127 - طريق السخنة",
+    "2128 - الجولف",
+    "2129 - المشير طنطاوي",
+    "2130 - المتحف المصري الكبير",
+    "2131 - 6 أكتوبر",
+    "2132 - تقاطع الفيوم",
+    "2133 - المنصورية",
   ];
-
   static const _accentColor = Color(0xFF4F8EF7);
   static const _surfaceBg = Color(0xFF111827);
   static const String _keyValue =
@@ -87,7 +126,6 @@ class CreateTicketPage extends StatelessWidget {
   // ─── Build ────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    TextEditingController ticketIdController = TextEditingController();
     return BlocProvider(
       create: (context) => CreateTicketCubit(),
       child: Scaffold(
@@ -104,7 +142,7 @@ class CreateTicketPage extends StatelessWidget {
                     const SizedBox(height: 14),
                     _buildDateTimeCard(context, state),
                     const SizedBox(height: 14),
-                    _buildTicketId(context, ticketIdController),
+                    _buildTicketId(state),
                     const SizedBox(height: 14),
                     _buildStationCard(context, state),
                     const SizedBox(height: 14),
@@ -181,23 +219,36 @@ class CreateTicketPage extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          const Text("تنتهي عند", style: TextStyle(color: Colors.white)),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              Expanded(
-                child: DateContainer(
-                  icon: Icons.calendar_today_rounded,
-                  label:
-                      "${_formatDate(state.toDate)} ${_formatTime(state.toDate)}",
-                  onTap: () => pickDateTime(context, false),
-                ),
-              ),
-            ],
-          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildTicketId(
+    CreateTicketState state,
+
+    // BuildContext context,
+    // TextEditingController controller,
+  ) {
+    return SectionCard(
+      icon: Icons.title_sharp,
+      title: "رقم التذكرة",
+      child: Text(
+        state.ticketId,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+
+      // TextField(
+      //   controller: controller,
+      //   keyboardType: TextInputType.number,
+      //   style: TextStyle(color: Colors.white),
+      //   onChanged: (con) {
+      //     context.read<CreateTicketCubit>().changeTicketId(controller);
+      //   },
     );
   }
 
@@ -210,6 +261,12 @@ class CreateTicketPage extends StatelessWidget {
         data: Theme.of(context).copyWith(canvasColor: const Color(0xFF242B3D)),
         child: DropdownButtonHideUnderline(
           child: DropdownButton<String>(
+            hint: Center(
+              child: const Text(
+                "اختر المحطة",
+                style: TextStyle(color: Colors.white70),
+              ),
+            ),
             isExpanded: true,
             value: state.station,
             dropdownColor: const Color(0xFF242B3D),
@@ -307,24 +364,6 @@ class CreateTicketPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTicketId(
-    BuildContext context,
-    TextEditingController controller,
-  ) {
-    return SectionCard(
-      icon: Icons.title_sharp,
-      title: "رقم التذكرة",
-      child: TextField(
-        controller: controller,
-        keyboardType: TextInputType.number,
-        style: TextStyle(color: Colors.white),
-        onChanged: (con) {
-          context.read<CreateTicketCubit>().changeTicketId(controller);
-        },
-      ),
-    );
-  }
-
   Widget buildQR(String keyValue) {
     return QrImageView(
       data: keyValue,
@@ -417,9 +456,9 @@ class CreateTicketPage extends StatelessWidget {
                       children: [
                         TicketDetailsRow(
                           label: "رقم التذكرة",
-                          value:
-                              "TKT-${state.stationCount.toString().padLeft(4, '0')}",
+                          value: state.ticketId,
                         ),
+                        const _InfoDivider(),
                         const _InfoDivider(),
                         TicketDetailsRow(
                           label: "تاريخ الإصدار",
@@ -435,17 +474,13 @@ class CreateTicketPage extends StatelessWidget {
                         const _InfoDivider(),
                         TicketDetailsRow(
                           label: "المحطة",
-                          value: state.station.split(' - ').last,
+                          value:
+                              state.station?.split(' - ').last ?? "اختر المحطة",
                         ),
                         const _InfoDivider(),
                         TicketDetailsRow(
                           label: "عدد المحطات المسموح بها",
                           value: "${state.stationCount}",
-                        ),
-                        const _InfoDivider(),
-                        TicketDetailsRow(
-                          label: "رقم التذكرة",
-                          value: state.ticketId.text,
                         ),
                         const _InfoDivider(),
                       ],
