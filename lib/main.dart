@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:qr_generate/ui/home/home_page.dart';
-import 'package:qr_generate/ui/ticket_page/ticket_page.dart';
 
 void main() {
   runApp(const MyApp());

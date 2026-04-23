@@ -5,9 +5,11 @@ import 'package:path_provider/path_provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:qr_generate/cubit/ticket_cubit/create_ticket_cubit.dart';
 import 'package:qr_generate/cubit/ticket_cubit/create_ticket_state.dart';
+import 'package:qr_generate/widgets/custom_widget/custom_divider.dart';
 import 'package:qr_generate/widgets/custom_widget/date_widget.dart';
 import 'package:qr_generate/widgets/ticket_widgets/counter_widget.dart';
 import 'package:qr_generate/widgets/custom_widget/custom_app_bar.dart';
+import 'package:qr_generate/widgets/ticket_widgets/custom_drop_menu.dart';
 import 'package:qr_generate/widgets/ticket_widgets/stations_widget.dart';
 import 'package:qr_generate/widgets/ticket_widgets/ticket_details.dart';
 import 'package:screenshot/screenshot.dart';
@@ -75,7 +77,7 @@ class CreateTicketPage extends StatelessWidget {
       "${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}";
 
   String _formatTime(DateTime dt) =>
-      "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
+      "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}:${dt.second.toString().padLeft(2, "0")}";
 
   Future<void> pickDateTime(BuildContext context, bool isFrom) async {
     final cubit = context.read<CreateTicketCubit>();
@@ -143,7 +145,7 @@ class CreateTicketPage extends StatelessWidget {
                     const SizedBox(height: 14),
                     _buildTicketId(state),
                     const SizedBox(height: 14),
-                    _buildStationCard(context, state),
+                    CustomDropMenu(state: state, station: _stations),
                     const SizedBox(height: 14),
                     _buildCounterCard(context, state),
                     const SizedBox(height: 14),
@@ -178,7 +180,7 @@ class CreateTicketPage extends StatelessWidget {
                 child: DateContainer(
                   icon: Icons.calendar_today_rounded,
                   label:
-                      "${_formatDate(state.date)} ${_formatTime(state.date)}",
+                      "${_formatDate(state.date)}   __  ${_formatTime(state.date)}",
                   onTap: () => pickDateTime(context, true),
                 ),
               ),
@@ -189,12 +191,7 @@ class CreateTicketPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTicketId(
-    CreateTicketState state,
-
-    // BuildContext context,
-    // TextEditingController controller,
-  ) {
+  Widget _buildTicketId(CreateTicketState state) {
     return SectionCard(
       icon: Icons.title_sharp,
       title: "رقم التذكرة",
@@ -204,59 +201,6 @@ class CreateTicketPage extends StatelessWidget {
           color: Colors.white,
           fontSize: 16,
           fontWeight: FontWeight.bold,
-        ),
-      ),
-
-      // TextField(
-      //   controller: controller,
-      //   keyboardType: TextInputType.number,
-      //   style: TextStyle(color: Colors.white),
-      //   onChanged: (con) {
-      //     context.read<CreateTicketCubit>().changeTicketId(controller);
-      //   },
-    );
-  }
-
-  Widget _buildStationCard(BuildContext context, CreateTicketState state) {
-    return SectionCard(
-      icon: Icons.train_rounded,
-      title: "محطة البدء",
-      child: Theme(
-        data: Theme.of(context).copyWith(canvasColor: const Color(0xFF242B3D)),
-        child: DropdownButtonHideUnderline(
-          child: DropdownButton<String>(
-            hint: Center(
-              child: const Text(
-                "اختر المحطة",
-                style: TextStyle(color: Colors.white70),
-              ),
-            ),
-            isExpanded: true,
-            value: state.station,
-            dropdownColor: const Color(0xFF242B3D),
-            icon: const Icon(
-              Icons.keyboard_arrow_down_rounded,
-              color: accentColor,
-            ),
-            style: const TextStyle(color: Colors.white, fontSize: 15),
-            items: _stations.map((stationName) {
-              return DropdownMenuItem(
-                alignment: AlignmentGeometry.center,
-                value: stationName,
-                child: Text(
-                  stationName,
-                  style: const TextStyle(color: Colors.white),
-                ),
-              );
-            }).toList(),
-            onChanged: (selectedNewStation) {
-              if (selectedNewStation != null) {
-                context.read<CreateTicketCubit>().changeStation(
-                  selectedNewStation,
-                );
-              }
-            },
-          ),
         ),
       ),
     );
@@ -365,7 +309,7 @@ class CreateTicketPage extends StatelessWidget {
                   const Icon(
                     Icons.train_rounded,
                     color: Colors.white54,
-                    size: 28,
+                    size: 34,
                   ),
                   const SizedBox(height: 6),
                   const Text(
@@ -373,23 +317,20 @@ class CreateTicketPage extends StatelessWidget {
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w800,
-                      fontSize: 20,
+                      fontSize: 21,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     "تتمنى لكم رحلة سعيدة",
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.8),
-                      fontSize: 13,
-                    ),
+                    style: TextStyle(color: Colors.white, fontSize: 14),
                   ),
                 ],
               ),
             ),
             Container(
               color: Colors.white,
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               child: Column(
                 children: [
                   Container(
@@ -430,31 +371,30 @@ class CreateTicketPage extends StatelessWidget {
                           label: "رقم التذكرة",
                           value: state.ticketId,
                         ),
-                        const _InfoDivider(),
-                        const _InfoDivider(),
+                        const CustomDivider(),
+                        const CustomDivider(),
                         TicketDetailsRow(
                           label: "تاريخ الإصدار",
                           value:
-                              "${_formatDate(state.date)}  ${_formatTime(state.date)}",
+                              "${_formatDate(state.date)} __ ${_formatTime(state.date)}",
                         ),
-                        const _InfoDivider(),
+                        const CustomDivider(),
                         TicketDetailsRow(
                           label: "صالحة حتى",
                           value:
-                              "${_formatDate(state.toDate)}  ${_formatTime(state.toDate)}",
+                              "${_formatDate(state.toDate)} __ ${_formatTime(state.toDate)}",
                         ),
-                        const _InfoDivider(),
+                        const CustomDivider(),
                         TicketDetailsRow(
                           label: "المحطة",
                           value:
                               state.station?.split(' - ').last ?? "اختر المحطة",
                         ),
-                        const _InfoDivider(),
+                        const CustomDivider(),
                         TicketDetailsRow(
                           label: "عدد المحطات المسموح بها",
                           value: "${state.stationCount}",
                         ),
-                        const _InfoDivider(),
                       ],
                     ),
                   ),
@@ -472,25 +412,6 @@ class CreateTicketPage extends StatelessWidget {
       children: [
         Expanded(
           child: OutlinedButton.icon(
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              foregroundColor: Colors.white70,
-            ),
-            onPressed: () {
-              _shareTicket();
-            },
-            icon: const Icon(Icons.share_rounded, size: 18),
-            label: const Text("SHARE"),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          flex: 2,
-          child: ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
               backgroundColor: accentColor,
               foregroundColor: Colors.white,
@@ -499,20 +420,14 @@ class CreateTicketPage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            onPressed: () {},
-            icon: const Icon(Icons.data_object_rounded, size: 18),
-            label: const Text("DECODE PAYLOAD"),
+            onPressed: () {
+              _shareTicket();
+            },
+            icon: const Icon(Icons.share_rounded, size: 18),
+            label: const Text("SHARE"),
           ),
         ),
       ],
     );
-  }
-}
-
-class _InfoDivider extends StatelessWidget {
-  const _InfoDivider();
-  @override
-  Widget build(BuildContext context) {
-    return const Divider(height: 1, color: Color(0xFFF3F4F6));
   }
 }

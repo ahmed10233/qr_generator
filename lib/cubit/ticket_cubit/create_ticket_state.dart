@@ -3,7 +3,7 @@ import 'dart:math';
 class CreateTicketState {
   final int stationCount;
   final String ticketId;
-  final String? station; // ← nullable
+  final String? station;
   final DateTime date;
   final DateTime toDate;
 
