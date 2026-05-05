@@ -70,8 +70,6 @@ class CreateTicketPage extends StatelessWidget {
   ];
   static const accentColor = Color(0xFF4F8EF7);
   static const surfaceBg = Color(0xFF111827);
-  static const String _keyValue = "gUdeENpYlayCon56lgAzlVDtUBrvAndF";
-
   // ─── Helpers ──────────────────────────────────────────────
   String _formatDate(DateTime dt) =>
       "${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}";
@@ -143,14 +141,9 @@ class CreateTicketPage extends StatelessWidget {
                     const SizedBox(height: 14),
                     _buildDateTimeCard(context, state),
                     const SizedBox(height: 14),
-                    _buildTicketId(state),
-                    const SizedBox(height: 14),
                     CustomDropMenu(state: state, station: _stations),
                     const SizedBox(height: 14),
                     _buildCounterCard(context, state),
-                    const SizedBox(height: 14),
-                    _buildKeyCard(),
-                    const SizedBox(height: 24),
                     const SizedBox(height: 16),
                     _buildTicketCard(state),
                     const SizedBox(height: 24),
@@ -172,36 +165,13 @@ class CreateTicketPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          const Text("تبداء من", style: TextStyle(color: Colors.white)),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              Expanded(
-                child: DateContainer(
-                  icon: Icons.calendar_today_rounded,
-                  label:
-                      "${_formatDate(state.date)}   __  ${_formatTime(state.date)}",
-                  onTap: () => pickDateTime(context, true),
-                ),
-              ),
-            ],
+          DateContainer(
+            icon: Icons.calendar_today_rounded,
+            label:
+                "${_formatDate(state.date)}   __  ${_formatTime(state.date)}",
+            onTap: () => pickDateTime(context, true),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildTicketId(CreateTicketState state) {
-    return SectionCard(
-      icon: Icons.title_sharp,
-      title: "رقم التذكرة",
-      child: Text(
-        state.ticketId,
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-        ),
       ),
     );
   }
@@ -222,7 +192,10 @@ class CreateTicketPage extends StatelessWidget {
               children: [
                 CounterButton(
                   icon: Icons.remove_rounded,
-                  onTap: () => context.read<CreateTicketCubit>().decrement(),
+                  onTap: () {
+                    context.read<CreateTicketCubit>().decrement();
+                    recreateTicket(state);
+                  },
                   enabled: state.stationCount > 1,
                 ),
                 Container(
@@ -239,7 +212,10 @@ class CreateTicketPage extends StatelessWidget {
                 ),
                 CounterButton(
                   icon: Icons.add_rounded,
-                  onTap: () => context.read<CreateTicketCubit>().increment(),
+                  onTap: () {
+                    context.read<CreateTicketCubit>().increment();
+                    recreateTicket(state);
+                  },
                   enabled: true,
                 ),
               ],
@@ -250,22 +226,15 @@ class CreateTicketPage extends StatelessWidget {
     );
   }
 
-  Widget _buildKeyCard() {
-    return SectionCard(
-      icon: Icons.vpn_key_rounded,
-      title: "Key",
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: Colors.black26,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-        ),
-        child: const Text(
-          _keyValue,
-          style: TextStyle(fontSize: 11, color: Color(0xFF7DD3FC), height: 1.5),
-        ),
+  void recreateTicket(CreateTicketState state) {
+    buildQR(
+      CreateTicketCubit.buildEncryptedQrPayload(
+        ticketId: state.ticketId,
+        stationCount: state.stationCount,
+        sourceStationId: CreateTicketCubit.parseStationId(state.station),
+        destinationStationId:
+            CreateTicketCubit.parseStationId(state.station) +
+            state.stationCount,
       ),
     );
   }
@@ -274,7 +243,7 @@ class CreateTicketPage extends StatelessWidget {
     return QrImageView(
       data: keyValue,
       version: QrVersions.auto,
-      size: 180,
+      size: 200,
       backgroundColor: Colors.white,
     );
   }
@@ -311,7 +280,7 @@ class CreateTicketPage extends StatelessWidget {
                     color: Colors.white54,
                     size: 34,
                   ),
-                  const SizedBox(height: 6),
+
                   const Text(
                     "وزارة النقل",
                     style: TextStyle(
@@ -319,11 +288,6 @@ class CreateTicketPage extends StatelessWidget {
                       fontWeight: FontWeight.w800,
                       fontSize: 21,
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    "تتمنى لكم رحلة سعيدة",
-                    style: TextStyle(color: Colors.white, fontSize: 14),
                   ),
                 ],
               ),
@@ -334,8 +298,8 @@ class CreateTicketPage extends StatelessWidget {
               child: Column(
                 children: [
                   Container(
-                    width: 220,
-                    height: 220,
+                    width: 280,
+                    height: 280,
                     decoration: BoxDecoration(
                       color: const Color(0xFFF3F4F6),
                       borderRadius: BorderRadius.circular(12),
@@ -362,28 +326,12 @@ class CreateTicketPage extends StatelessWidget {
                     "امسح للتحقق من التذكرة",
                     style: TextStyle(color: Colors.black, fontSize: 14),
                   ),
-                  const SizedBox(height: 20),
                   Directionality(
                     textDirection: TextDirection.rtl,
                     child: Column(
                       children: [
-                        TicketDetailsRow(
-                          label: "رقم التذكرة",
-                          value: state.ticketId,
-                        ),
                         const CustomDivider(),
-                        const CustomDivider(),
-                        TicketDetailsRow(
-                          label: "تاريخ الإصدار",
-                          value:
-                              "${_formatDate(state.date)} __ ${_formatTime(state.date)}",
-                        ),
-                        const CustomDivider(),
-                        TicketDetailsRow(
-                          label: "صالحة حتى",
-                          value:
-                              "${_formatDate(state.toDate)} __ ${_formatTime(state.toDate)}",
-                        ),
+
                         const CustomDivider(),
                         TicketDetailsRow(
                           label: "المحطة",

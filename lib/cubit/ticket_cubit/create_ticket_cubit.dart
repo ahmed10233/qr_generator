@@ -1,10 +1,8 @@
 import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
-
 import 'package:encrypt/encrypt.dart' as encrypt;
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'create_ticket_state.dart';
 
 class CreateTicketCubit extends Cubit<CreateTicketState> {
